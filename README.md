@@ -15,18 +15,13 @@ You fully control how the menu looks and behaves.
 
 ## 🎬 Demo
 
-<table>
-  <tr>
-    <td>
-      <strong>View host (inside normal screens)</strong><br />
-      <img src="assets/demo1.gif" width="320" />
-    </td>
-    <td>
-      <strong>View host inside native <code>&lt;Modal&gt;</code> (and nested modals)</strong><br />
-      <img src="assets/demo2.gif" width="320" />
-    </td>
-  </tr>
-</table>
+**View host (inside normal screens)**
+
+![View host demo](https://raw.githubusercontent.com/mahmoudelfekygithub/react-native-anchored-menu/main/assets/demo1.gif)
+
+**View host inside native `<Modal>` (and nested modals)**
+
+![Modal demo](https://raw.githubusercontent.com/mahmoudelfekygithub/react-native-anchored-menu/main/assets/demo2.gif)
 
 ---
 
