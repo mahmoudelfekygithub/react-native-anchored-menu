@@ -122,6 +122,65 @@ open({
 
 ---
 
+## 🪟 Using inside React Native `<Modal>`
+
+React Native `<Modal>` is rendered in a separate native layer. To ensure the menu appears **above** the modal content, mount a provider/layer **inside** the modal tree.
+
+Recommended:
+
+```tsx
+import React, { useState } from "react";
+import { Modal, Pressable, Text, View } from "react-native";
+import {
+  AnchoredMenuLayer,
+  MenuAnchor,
+  useAnchoredMenuActions,
+} from "react-native-anchored-menu";
+
+export function ExampleModalMenu() {
+  const [visible, setVisible] = useState(false);
+  const { open } = useAnchoredMenuActions();
+
+  return (
+    <>
+      <Pressable onPress={() => setVisible(true)}>
+        <Text>Open modal</Text>
+      </Pressable>
+
+      <Modal transparent visible={visible} onRequestClose={() => setVisible(false)}>
+        <AnchoredMenuLayer>
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <MenuAnchor id="modal-menu">
+              <Pressable
+                onPress={() =>
+                  open({
+                    id: "modal-menu",
+                    host: "view",
+                    render: ({ close }) => (
+                      <View style={{ backgroundColor: "#111", padding: 12, borderRadius: 8 }}>
+                        <Pressable onPress={close}>
+                          <Text style={{ color: "#fff" }}>Action</Text>
+                        </Pressable>
+                      </View>
+                    ),
+                  })
+                }
+              >
+                <Text>Open menu</Text>
+              </Pressable>
+            </MenuAnchor>
+
+            <Pressable onPress={() => setVisible(false)}>
+              <Text>Close modal</Text>
+            </Pressable>
+          </View>
+        </AnchoredMenuLayer>
+      </Modal>
+    </>
+  );
+}
+```
+
 ## 🧠 API
 
 ### `useAnchoredMenuActions()`
