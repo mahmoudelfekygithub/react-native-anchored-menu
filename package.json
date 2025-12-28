@@ -1,0 +1,25 @@
+{
+  "name": "react-native-anchored-menu",
+  "version": "0.0.1",
+  "description": "Headless anchored menu/popover for React Native with stable measurement (view host by default).",
+  "main": "src/index.js",
+  "react-native": "src/index.js",
+  "files": [
+    "src",
+    "assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "react-native",
+    "context-menu",
+    "popover",
+    "menu",
+    "anchor"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  }
+}
