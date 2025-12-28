@@ -136,6 +136,13 @@ const { open, close } = useAnchoredMenuActions();
 const isOpen = useAnchoredMenuState((s) => s.isOpen);
 ```
 
+**Recommended (performance)**: prefer split hooks in large trees to reduce re-renders:
+
+```ts
+const isOpen = useAnchoredMenuState((s) => s.isOpen);
+const { open } = useAnchoredMenuActions();
+```
+
 > `useAnchoredMenu()` is still available for backwards compatibility, but the split hooks are recommended
 > to reduce re-renders in large trees.
 
