@@ -126,6 +126,11 @@ open({
 
 React Native `<Modal>` is rendered in a separate native layer. To ensure the menu appears **above** the modal content, mount a provider/layer **inside** the modal tree.
 
+**Sheets & overlays**:
+
+- **Native-layer overlays** (RN `<Modal>`, `react-native-navigation` modals/overlays, etc.): mount `AnchoredMenuLayer` inside that overlay’s content tree.
+- **JS-only sheets** (rendered as normal React views in the same tree): you can keep a single provider at the app root.
+
 Recommended:
 
 ```tsx
