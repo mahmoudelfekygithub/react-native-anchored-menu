@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mahmoudelfekygithub.github.io/react-native-anchored-menu/sitemap.xml
+

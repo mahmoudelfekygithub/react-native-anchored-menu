@@ -1,7 +1,7 @@
 {
   "name": "react-native-anchored-menu",
-  "version": "0.0.10",
-  "description": "Headless anchored menu/popover for React Native with stable measurement (view host by default).",
+  "version": "0.0.11",
+  "description": "Headless anchored context menu / popover for React Native (iOS/Android) with stable measurement (default view host).",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mahmoudelfekygithub/react-native-anchored-menu.git"
@@ -9,21 +9,31 @@
   "bugs": {
     "url": "https://github.com/mahmoudelfekygithub/react-native-anchored-menu/issues"
   },
-  "homepage": "https://github.com/mahmoudelfekygithub/react-native-anchored-menu#readme",
+  "homepage": "https://mahmoudelfekygithub.github.io/react-native-anchored-menu/",
   "main": "src/index.js",
   "react-native": "src/index.js",
   "files": [
     "src",
     "assets",
+    "docs",
     "README.md",
     "LICENSE"
   ],
   "keywords": [
     "react-native",
+    "react native",
     "context-menu",
+    "contextmenu",
     "popover",
+    "popover-menu",
+    "anchored",
+    "anchored-menu",
     "menu",
-    "anchor"
+    "dropdown",
+    "tooltip",
+    "overlay",
+    "anchor",
+    "positioning"
   ],
   "license": "MIT",
   "peerDependencies": {

@@ -11,6 +11,12 @@ A **headless, anchor-based menu / popover system for React Native** designed to 
 This library focuses on **correct measurement and positioning**, not UI.  
 You fully control how the menu looks and behaves.
 
+## 🔎 Links
+
+- **Website (for Google indexing)**: `https://mahmoudelfekygithub.github.io/react-native-anchored-menu/`
+- **GitHub**: `https://github.com/mahmoudelfekygithub/react-native-anchored-menu`  
+- **npm**: `https://www.npmjs.com/package/react-native-anchored-menu`
+
 ---
 
 ## 🎬 Demo
