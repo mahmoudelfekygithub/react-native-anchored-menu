@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, View } from "react-native";
+import { Keyboard, Pressable, View } from "react-native";
 import {
   AnchoredMenuActionsContext,
   AnchoredMenuStateContext,
@@ -38,7 +38,9 @@ export function ViewHost() {
   const [anchorWin, setAnchorWin] = useState(null);
   const [hostWin, setHostWin] = useState(null);
   const [menuSize, setMenuSize] = useState({ width: 0, height: 0 });
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const measureCacheRef = useRef(new Map()); // id -> { t, anchorWin, hostWin }
+  const remeasureTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (!req) {
@@ -98,6 +100,85 @@ export function ViewHost() {
     };
   }, [req?.id, req, actions.anchors]);
 
+  // Re-measure when keyboard shows/hides
+  useEffect(() => {
+    if (!req) return;
+
+    const showSubscription = Keyboard.addListener("keyboardDidShow", (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+      // Debounce re-measurement to avoid multiple rapid calls
+      if (remeasureTimeoutRef.current) {
+        clearTimeout(remeasureTimeoutRef.current);
+      }
+      remeasureTimeoutRef.current = setTimeout(async () => {
+        if (!req || !hostRef.current) return;
+        const refObj = actions.anchors.get(req.id);
+        if (!refObj) return;
+
+        const strategy = req?.measurement ?? "stable";
+        const tries =
+          typeof req?.measurementTries === "number" ? req.measurementTries : 8;
+        const measure =
+          strategy === "fast" ? measureInWindowFast : measureInWindowStable;
+
+        const [a, h] = await Promise.all([
+          measure(refObj, strategy === "stable" ? { tries } : undefined),
+          measure(hostRef, strategy === "stable" ? { tries } : undefined),
+        ]);
+
+        const nextAnchorWin = applyAnchorMargins(a, refObj);
+        setAnchorWin(nextAnchorWin);
+        setHostWin(h);
+        measureCacheRef.current.set(req.id, {
+          t: Date.now(),
+          anchorWin: nextAnchorWin,
+          hostWin: h,
+        });
+      }, 100);
+    });
+
+    const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0);
+      // Re-measure when keyboard hides
+      if (remeasureTimeoutRef.current) {
+        clearTimeout(remeasureTimeoutRef.current);
+      }
+      remeasureTimeoutRef.current = setTimeout(async () => {
+        if (!req || !hostRef.current) return;
+        const refObj = actions.anchors.get(req.id);
+        if (!refObj) return;
+
+        const strategy = req?.measurement ?? "stable";
+        const tries =
+          typeof req?.measurementTries === "number" ? req.measurementTries : 8;
+        const measure =
+          strategy === "fast" ? measureInWindowFast : measureInWindowStable;
+
+        const [a, h] = await Promise.all([
+          measure(refObj, strategy === "stable" ? { tries } : undefined),
+          measure(hostRef, strategy === "stable" ? { tries } : undefined),
+        ]);
+
+        const nextAnchorWin = applyAnchorMargins(a, refObj);
+        setAnchorWin(nextAnchorWin);
+        setHostWin(h);
+        measureCacheRef.current.set(req.id, {
+          t: Date.now(),
+          anchorWin: nextAnchorWin,
+          hostWin: h,
+        });
+      }, 100);
+    });
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+      if (remeasureTimeoutRef.current) {
+        clearTimeout(remeasureTimeoutRef.current);
+      }
+    };
+  }, [req?.id, req, actions.anchors]);
+
   const anchorInHost = useMemo(() => {
     if (!anchorWin || !hostWin) return null;
     return {
@@ -111,7 +192,10 @@ export function ViewHost() {
     if (!req || !anchorInHost) return null;
     const viewport =
       hostSize.width && hostSize.height
-        ? { width: hostSize.width, height: hostSize.height }
+        ? {
+            width: hostSize.width,
+            height: hostSize.height - keyboardHeight, // Adjust viewport for keyboard
+          }
         : undefined;
 
     return computeMenuPosition({

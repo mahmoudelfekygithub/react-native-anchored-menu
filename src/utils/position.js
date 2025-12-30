@@ -25,9 +25,17 @@ export function computeMenuPosition({
   if (align === "center" && mW) left = anchor.pageX + anchor.width / 2 - mW / 2;
   if (align === "end" && mW) left = anchor.pageX + anchor.width - mW;
 
-  // Optional RTL hook (kept as no-op unless you customize)
+  // RTL-aware alignment: flip start/end when RTL is enabled
   if (rtlAware && I18nManager.isRTL) {
-    // no-op by default
+    // In RTL, "start" means right side, "end" means left side
+    if (align === "start" && mW) {
+      // Align to right edge of anchor
+      left = anchor.pageX + anchor.width - mW;
+    } else if (align === "end" && mW) {
+      // Align to left edge of anchor
+      left = anchor.pageX;
+    }
+    // "center" stays the same in RTL
   }
 
   if (mW) left = clamp(left, margin, SW - mW - margin);
