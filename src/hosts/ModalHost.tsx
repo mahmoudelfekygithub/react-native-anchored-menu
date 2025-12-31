@@ -12,6 +12,17 @@ import {
 } from "../utils/measure";
 import { computeMenuPosition } from "../utils/position";
 import { isFabricEnabled } from "../utils/runtime";
+import type {
+  AnchorMeasurement,
+  MenuSize,
+  Viewport,
+} from "../types";
+
+interface MeasureCache {
+  t: number;
+  anchorWin: AnchorMeasurement | null;
+  hostWin: AnchorMeasurement | null;
+}
 
 export function ModalHost() {
   const actions = useContext(AnchoredMenuActionsContext);
@@ -25,15 +36,15 @@ export function ModalHost() {
   const req = useAnchoredMenuState((s) => s.request);
   const visible = !!req;
 
-  const hostRef = useRef(null);
-  const [hostSize, setHostSize] = useState({ width: 0, height: 0 });
+  const hostRef = useRef<View>(null);
+  const [hostSize, setHostSize] = useState<MenuSize>({ width: 0, height: 0 });
 
-  const [anchorWin, setAnchorWin] = useState(null);
-  const [hostWin, setHostWin] = useState(null);
-  const [menuSize, setMenuSize] = useState({ width: 0, height: 0 });
+  const [anchorWin, setAnchorWin] = useState<AnchorMeasurement | null>(null);
+  const [hostWin, setHostWin] = useState<AnchorMeasurement | null>(null);
+  const [menuSize, setMenuSize] = useState<MenuSize>({ width: 0, height: 0 });
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const measureCacheRef = useRef(new Map()); // id -> { t, anchorWin, hostWin }
-  const remeasureTimeoutRef = useRef(null);
+  const measureCacheRef = useRef(new Map<string, MeasureCache>());
+  const remeasureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!req) {
@@ -67,7 +78,7 @@ export function ModalHost() {
       const refObj = actions.anchors.get(req.id); // ref object
       if (!refObj || !hostRef.current) return;
 
-      const strategy = req?.measurement ?? "stable"; // "stable" | "fast"
+      const strategy = req?.measurement ?? "stable";
       const tries =
         typeof req?.measurementTries === "number" ? req.measurementTries : 8;
       const measure =
@@ -186,7 +197,7 @@ export function ModalHost() {
 
   const position = useMemo(() => {
     if (!req || !anchorInHost) return null;
-    const viewport =
+    const viewport: Viewport | undefined =
       hostSize.width && hostSize.height
         ? {
             width: hostSize.width,
@@ -203,7 +214,7 @@ export function ModalHost() {
       align: req.align ?? "start",
       rtlAware: req.rtlAware ?? true,
     });
-  }, [req, anchorInHost, menuSize, hostSize]);
+  }, [req, anchorInHost, menuSize, hostSize, keyboardHeight]);
 
   const needsInitialMeasure = menuSize.width === 0 || menuSize.height === 0;
 
@@ -230,38 +241,39 @@ export function ModalHost() {
             setHostSize({ width, height });
           }
         }}
-    >
-      {/* Tap outside to dismiss */}
+      >
+        {/* Tap outside to dismiss */}
         <Pressable style={{ flex: 1 }} onPress={actions.close}>
           {visible && !!anchorInHost && !!position ? (
-        <View
-          style={{
-            position: "absolute",
+            <View
+              style={{
+                position: "absolute",
                 // Keep in-place so layout runs on iOS; hide visually until measured to avoid flicker.
-            top: position.top,
-            left: position.left,
+                top: position.top,
+                left: position.left,
                 opacity: needsInitialMeasure ? 0 : 1,
-          }}
+              }}
               pointerEvents={needsInitialMeasure ? "none" : "auto"}
-          onStartShouldSetResponder={() => true}
-          onLayout={(e) => {
-            const { width, height } = e.nativeEvent.layout;
-            if (width !== menuSize.width || height !== menuSize.height) {
-              setMenuSize({ width, height });
-            }
-          }}
-        >
-          {typeof req.render === "function"
+              onStartShouldSetResponder={() => true}
+              onLayout={(e) => {
+                const { width, height } = e.nativeEvent.layout;
+                if (width !== menuSize.width || height !== menuSize.height) {
+                  setMenuSize({ width, height });
+                }
+              }}
+            >
+              {typeof req.render === "function"
                 ? req.render({
                     close: actions.close,
                     anchor: anchorWin,
                     anchorInHost,
                   })
-            : req.content}
-        </View>
+                : req.content}
+            </View>
           ) : null}
-      </Pressable>
+        </Pressable>
       </View>
     </Modal>
   );
 }
+

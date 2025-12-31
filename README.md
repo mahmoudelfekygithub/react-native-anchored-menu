@@ -13,7 +13,6 @@ You fully control how the menu looks and behaves.
 
 ## 🔎 Links
 
-- **Website (for Google indexing)**: `https://mahmoudelfekygithub.github.io/react-native-anchored-menu/`
 - **GitHub**: `https://github.com/mahmoudelfekygithub/react-native-anchored-menu`  
 - **npm**: `https://www.npmjs.com/package/react-native-anchored-menu`
 
@@ -162,24 +161,24 @@ export function ExampleModalMenu() {
         <AnchoredMenuLayer>
           <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
             <MenuAnchor id="modal-menu">
-              <Pressable
+      <Pressable
                 onPress={() =>
-                  open({
+          open({
                     id: "modal-menu",
                     host: "view",
-                    render: ({ close }) => (
+            render: ({ close }) => (
                       <View style={{ backgroundColor: "#111", padding: 12, borderRadius: 8 }}>
                         <Pressable onPress={close}>
                           <Text style={{ color: "#fff" }}>Action</Text>
-                        </Pressable>
-                      </View>
-                    ),
-                  })
-                }
-              >
+                </Pressable>
+              </View>
+            ),
+          })
+        }
+      >
                 <Text>Open menu</Text>
-              </Pressable>
-            </MenuAnchor>
+      </Pressable>
+    </MenuAnchor>
 
             <Pressable onPress={() => setVisible(false)}>
               <Text>Close modal</Text>

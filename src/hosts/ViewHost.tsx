@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Keyboard, Modal, Platform, Pressable, View } from "react-native";
+import { Keyboard, Pressable, View } from "react-native";
 import {
   AnchoredMenuActionsContext,
   AnchoredMenuStateContext,
@@ -11,29 +11,47 @@ import {
   measureInWindowStable,
 } from "../utils/measure";
 import { computeMenuPosition } from "../utils/position";
-import { isFabricEnabled } from "../utils/runtime";
+import type {
+  AnchorMeasurement,
+  MenuSize,
+  Viewport,
+} from "../types";
 
-export function ModalHost() {
+interface MeasureCache {
+  t: number;
+  anchorWin: AnchorMeasurement | null;
+  hostWin: AnchorMeasurement | null;
+}
+
+/**
+ * ViewHost (non-native-modal host)
+ *
+ * Renders the menu as an absolutely-positioned overlay View, without presenting
+ * a native <Modal>. This is safe to use inside an existing RN <Modal>.
+ *
+ * NOTE: Must be mounted inside a parent that can cover the intended area
+ * (usually at the app root, or inside your RN Modal content).
+ */
+export function ViewHost() {
   const actions = useContext(AnchoredMenuActionsContext);
   const store = useContext(AnchoredMenuStateContext);
   if (!actions || !store) throw new Error("AnchoredMenuProvider is missing");
 
   const activeHost = useAnchoredMenuState((s) => s.activeHost);
-  if (activeHost !== "modal") return null;
-  if (isFabricEnabled() && Platform.OS !== "web") return null;
+  if (activeHost !== "view") return null;
 
   const req = useAnchoredMenuState((s) => s.request);
   const visible = !!req;
 
-  const hostRef = useRef(null);
-  const [hostSize, setHostSize] = useState({ width: 0, height: 0 });
+  const hostRef = useRef<View>(null);
+  const [hostSize, setHostSize] = useState<MenuSize>({ width: 0, height: 0 });
 
-  const [anchorWin, setAnchorWin] = useState(null);
-  const [hostWin, setHostWin] = useState(null);
-  const [menuSize, setMenuSize] = useState({ width: 0, height: 0 });
+  const [anchorWin, setAnchorWin] = useState<AnchorMeasurement | null>(null);
+  const [hostWin, setHostWin] = useState<AnchorMeasurement | null>(null);
+  const [menuSize, setMenuSize] = useState<MenuSize>({ width: 0, height: 0 });
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const measureCacheRef = useRef(new Map()); // id -> { t, anchorWin, hostWin }
-  const remeasureTimeoutRef = useRef(null);
+  const measureCacheRef = useRef(new Map<string, MeasureCache>());
+  const remeasureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!req) {
@@ -55,19 +73,17 @@ export function ModalHost() {
     }
   }, [req?.id, req]);
 
-  // Measure after Modal is visible (hostRef exists only then)
   useEffect(() => {
     let cancelled = false;
 
     async function run() {
-      if (!req) return;
-      await new Promise((r) => requestAnimationFrame(r));
+      if (!req || !hostRef.current) return;
       await new Promise((r) => requestAnimationFrame(r));
 
       const refObj = actions.anchors.get(req.id); // ref object
-      if (!refObj || !hostRef.current) return;
+      if (!refObj) return;
 
-      const strategy = req?.measurement ?? "stable"; // "stable" | "fast"
+      const strategy = req?.measurement ?? "stable";
       const tries =
         typeof req?.measurementTries === "number" ? req.measurementTries : 8;
       const measure =
@@ -174,7 +190,6 @@ export function ModalHost() {
     };
   }, [req?.id, req, actions.anchors]);
 
-  // window coords -> host coords (avoids status bar / inset mismatches)
   const anchorInHost = useMemo(() => {
     if (!anchorWin || !hostWin) return null;
     return {
@@ -186,13 +201,14 @@ export function ModalHost() {
 
   const position = useMemo(() => {
     if (!req || !anchorInHost) return null;
-    const viewport =
+    const viewport: Viewport | undefined =
       hostSize.width && hostSize.height
         ? {
             width: hostSize.width,
             height: hostSize.height - keyboardHeight, // Adjust viewport for keyboard
           }
         : undefined;
+
     return computeMenuPosition({
       anchor: anchorInHost,
       menuSize,
@@ -203,65 +219,65 @@ export function ModalHost() {
       align: req.align ?? "start",
       rtlAware: req.rtlAware ?? true,
     });
-  }, [req, anchorInHost, menuSize, hostSize]);
+  }, [req, anchorInHost, menuSize, hostSize, keyboardHeight]);
 
   const needsInitialMeasure = menuSize.width === 0 || menuSize.height === 0;
-
-  const statusBarTranslucent =
-    req?.statusBarTranslucent ?? (Platform.OS === "android" ? false : true);
-
   if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType={req.animationType ?? "fade"}
-      statusBarTranslucent={statusBarTranslucent}
-      onRequestClose={actions.close}
-    >
-      <View
-        ref={hostRef}
-        collapsable={false}
-        style={{ flex: 1 }}
-        onLayout={(e) => {
-          const { width, height } = e.nativeEvent.layout;
-          if (width !== hostSize.width || height !== hostSize.height) {
-            setHostSize({ width, height });
-          }
-        }}
+    <View
+      ref={hostRef}
+      collapsable={false}
+      style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        zIndex: 9999,
+        elevation: 9999,
+      }}
+      pointerEvents="box-none"
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        if (width !== hostSize.width || height !== hostSize.height) {
+          setHostSize({ width, height });
+        }
+      }}
     >
       {/* Tap outside to dismiss */}
-        <Pressable style={{ flex: 1 }} onPress={actions.close}>
-          {visible && !!anchorInHost && !!position ? (
-        <View
-          style={{
-            position: "absolute",
-                // Keep in-place so layout runs on iOS; hide visually until measured to avoid flicker.
-            top: position.top,
-            left: position.left,
-                opacity: needsInitialMeasure ? 0 : 1,
-          }}
-              pointerEvents={needsInitialMeasure ? "none" : "auto"}
-          onStartShouldSetResponder={() => true}
-          onLayout={(e) => {
-            const { width, height } = e.nativeEvent.layout;
-            if (width !== menuSize.width || height !== menuSize.height) {
-              setMenuSize({ width, height });
-            }
-          }}
-        >
-          {typeof req.render === "function"
-                ? req.render({
-                    close: actions.close,
-                    anchor: anchorWin,
-                    anchorInHost,
-                  })
-            : req.content}
-        </View>
-          ) : null}
+      <Pressable style={{ flex: 1 }} onPress={actions.close}>
+        {visible && !!anchorInHost && !!position ? (
+          <View
+            style={{
+              position: "absolute",
+              // Keep in-place so layout runs on iOS; hide visually until measured to avoid flicker.
+              top: position.top,
+              left: position.left,
+              zIndex: 10000,
+              elevation: 10000,
+              opacity: needsInitialMeasure ? 0 : 1,
+            }}
+            pointerEvents={needsInitialMeasure ? "none" : "auto"}
+            onStartShouldSetResponder={() => true}
+            onLayout={(e) => {
+              const { width, height } = e.nativeEvent.layout;
+              if (width !== menuSize.width || height !== menuSize.height) {
+                setMenuSize({ width, height });
+              }
+            }}
+          >
+            {typeof req.render === "function"
+              ? req.render({
+                  close: actions.close,
+                  anchor: anchorWin,
+                  anchorInHost,
+                })
+              : req.content}
+          </View>
+        ) : null}
       </Pressable>
-      </View>
-    </Modal>
+    </View>
   );
 }
+
