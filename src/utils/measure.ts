@@ -1,5 +1,5 @@
 import { InteractionManager, UIManager, findNodeHandle } from "react-native";
-import type { AnchorMeasurement, AnchorMargins, AnchorRefObject } from "../types";
+import type { AnchorMeasurement, AnchorRefObject } from "../types";
 
 const raf = (): Promise<number> => new Promise((r) => requestAnimationFrame(r));
 
@@ -10,8 +10,10 @@ async function measureInWindowOnce(
     (target as { current?: number | null })?.current ?? target
   );
   if (!node) return null;
-  return await new Promise((resolve) => {
-    UIManager.measureInWindow(node, (x, y, width, height) => {
+  return await new Promise<AnchorMeasurement>((resolve) => {
+    // UIManager.measureInWindow callback signature varies by RN version
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (UIManager.measureInWindow as any)(node, (x: number, y: number, width: number, height: number) => {
       resolve({ pageX: x, pageY: y, width, height });
     });
   });

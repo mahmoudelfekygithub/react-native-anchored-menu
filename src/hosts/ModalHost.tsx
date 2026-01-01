@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Keyboard, Modal, Platform, Pressable, View } from "react-native";
+import { Keyboard, Modal, Platform, Pressable, View, LayoutChangeEvent } from "react-native";
 import {
   AnchoredMenuActionsContext,
   AnchoredMenuStateContext,
@@ -44,7 +44,7 @@ export function ModalHost() {
   const [menuSize, setMenuSize] = useState<MenuSize>({ width: 0, height: 0 });
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const measureCacheRef = useRef(new Map<string, MeasureCache>());
-  const remeasureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const remeasureTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!req) {
@@ -235,7 +235,7 @@ export function ModalHost() {
         ref={hostRef}
         collapsable={false}
         style={{ flex: 1 }}
-        onLayout={(e) => {
+        onLayout={(e: LayoutChangeEvent) => {
           const { width, height } = e.nativeEvent.layout;
           if (width !== hostSize.width || height !== hostSize.height) {
             setHostSize({ width, height });
@@ -255,7 +255,7 @@ export function ModalHost() {
               }}
               pointerEvents={needsInitialMeasure ? "none" : "auto"}
               onStartShouldSetResponder={() => true}
-              onLayout={(e) => {
+              onLayout={(e: LayoutChangeEvent) => {
                 const { width, height } = e.nativeEvent.layout;
                 if (width !== menuSize.width || height !== menuSize.height) {
                   setMenuSize({ width, height });

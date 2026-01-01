@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { Keyboard, Pressable, View } from "react-native";
+import { Keyboard, Pressable, View, LayoutChangeEvent } from "react-native";
 import {
   AnchoredMenuActionsContext,
   AnchoredMenuStateContext,
@@ -51,7 +51,7 @@ export function ViewHost() {
   const [menuSize, setMenuSize] = useState<MenuSize>({ width: 0, height: 0 });
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const measureCacheRef = useRef(new Map<string, MeasureCache>());
-  const remeasureTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const remeasureTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!req) {
@@ -238,12 +238,12 @@ export function ViewHost() {
         elevation: 9999,
       }}
       pointerEvents="box-none"
-      onLayout={(e) => {
-        const { width, height } = e.nativeEvent.layout;
-        if (width !== hostSize.width || height !== hostSize.height) {
-          setHostSize({ width, height });
-        }
-      }}
+            onLayout={(e: LayoutChangeEvent) => {
+              const { width, height } = e.nativeEvent.layout;
+              if (width !== hostSize.width || height !== hostSize.height) {
+                setHostSize({ width, height });
+              }
+            }}
     >
       {/* Tap outside to dismiss */}
       <Pressable style={{ flex: 1 }} onPress={actions.close}>
@@ -260,7 +260,7 @@ export function ViewHost() {
             }}
             pointerEvents={needsInitialMeasure ? "none" : "auto"}
             onStartShouldSetResponder={() => true}
-            onLayout={(e) => {
+            onLayout={(e: LayoutChangeEvent) => {
               const { width, height } = e.nativeEvent.layout;
               if (width !== menuSize.width || height !== menuSize.height) {
                 setMenuSize({ width, height });

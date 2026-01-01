@@ -14,7 +14,8 @@
     "noEmit": true,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "types": ["react-native"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

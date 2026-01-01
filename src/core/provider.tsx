@@ -49,11 +49,11 @@ export function AnchoredMenuProvider({
     };
     storeRef.current = {
       getSnapshot: () => snapshot,
-      subscribe: (listener) => {
+      subscribe: (listener: () => void) => {
         listeners.add(listener);
         return () => listeners.delete(listener);
       },
-      _setSnapshot: (next) => {
+      _setSnapshot: (next: MenuState) => {
         snapshot = next;
         listeners.forEach((l) => l());
       },
