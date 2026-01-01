@@ -1,6 +1,6 @@
 {
   "name": "react-native-anchored-menu",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Headless anchored context menu / popover for React Native (iOS/Android) with stable measurement (default view host).",
   "repository": {
     "type": "git",

@@ -71,7 +71,7 @@ export function ModalHost() {
     let cancelled = false;
 
     async function run() {
-      if (!req) return;
+      if (!req || !actions) return;
       await new Promise((r) => requestAnimationFrame(r));
       await new Promise((r) => requestAnimationFrame(r));
 
@@ -86,7 +86,8 @@ export function ModalHost() {
 
       const [a, h] = await Promise.all([
         measure(refObj, strategy === "stable" ? { tries } : undefined),
-        measure(hostRef, strategy === "stable" ? { tries } : undefined),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        measure(hostRef as any, strategy === "stable" ? { tries } : undefined),
       ]);
 
       if (cancelled) return;
@@ -117,7 +118,7 @@ export function ModalHost() {
         clearTimeout(remeasureTimeoutRef.current);
       }
       remeasureTimeoutRef.current = setTimeout(async () => {
-        if (!req || !hostRef.current) return;
+        if (!req || !hostRef.current || !actions) return;
         const refObj = actions.anchors.get(req.id);
         if (!refObj) return;
 
@@ -129,7 +130,8 @@ export function ModalHost() {
 
         const [a, h] = await Promise.all([
           measure(refObj, strategy === "stable" ? { tries } : undefined),
-          measure(hostRef, strategy === "stable" ? { tries } : undefined),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          measure(hostRef as any, strategy === "stable" ? { tries } : undefined),
         ]);
 
         const nextAnchorWin = applyAnchorMargins(a, refObj);
@@ -150,7 +152,7 @@ export function ModalHost() {
         clearTimeout(remeasureTimeoutRef.current);
       }
       remeasureTimeoutRef.current = setTimeout(async () => {
-        if (!req || !hostRef.current) return;
+        if (!req || !hostRef.current || !actions) return;
         const refObj = actions.anchors.get(req.id);
         if (!refObj) return;
 
@@ -162,7 +164,8 @@ export function ModalHost() {
 
         const [a, h] = await Promise.all([
           measure(refObj, strategy === "stable" ? { tries } : undefined),
-          measure(hostRef, strategy === "stable" ? { tries } : undefined),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          measure(hostRef as any, strategy === "stable" ? { tries } : undefined),
         ]);
 
         const nextAnchorWin = applyAnchorMargins(a, refObj);

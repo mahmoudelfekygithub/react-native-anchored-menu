@@ -4,11 +4,14 @@ import type { AnchorMeasurement, AnchorRefObject } from "../types";
 const raf = (): Promise<number> => new Promise((r) => requestAnimationFrame(r));
 
 async function measureInWindowOnce(
-  target: { current: number | null } | number | null
+  target: { current: number | null } | number | null | any
 ): Promise<AnchorMeasurement | null> {
-  const node = findNodeHandle(
-    (target as { current?: number | null })?.current ?? target
-  );
+  // Handle both ref objects and direct node handles
+  const nodeHandle = typeof target === "number" 
+    ? target 
+    : target?.current ?? target;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const node = findNodeHandle(nodeHandle as any);
   if (!node) return null;
   return await new Promise<AnchorMeasurement>((resolve) => {
     // UIManager.measureInWindow callback signature varies by RN version
@@ -24,7 +27,7 @@ async function measureInWindowOnce(
  * Useful for very simple layouts where Android/FlatList flakiness isn't a concern.
  */
 export async function measureInWindowFast(
-  target: { current: number | null } | number | null
+  target: { current: number | null } | number | null | any
 ): Promise<AnchorMeasurement | null> {
   await raf();
   return await measureInWindowOnce(target);
@@ -39,14 +42,21 @@ export interface MeasureOptions {
  * and retries until values stabilize.
  */
 export async function measureInWindowStable(
-  target: { current: number | null } | number | null,
+  target: { current: number | null } | number | null | any,
   { tries = 8 }: MeasureOptions = {}
 ): Promise<AnchorMeasurement | null> {
-  await new Promise((r) => InteractionManager.runAfterInteractions(r));
+  await new Promise<void>((r) => {
+    InteractionManager.runAfterInteractions(() => {
+      r();
+    });
+  });
 
-  const node = findNodeHandle(
-    (target as { current?: number | null })?.current ?? target
-  );
+  // Handle both ref objects and direct node handles
+  const nodeHandle = typeof target === "number" 
+    ? target 
+    : target?.current ?? target;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const node = findNodeHandle(nodeHandle as any);
   if (!node) return null;
 
   let last: AnchorMeasurement | null = null;
@@ -77,7 +87,7 @@ export async function measureInWindowStable(
  * Uses measureInWindow so coords match overlay/Modal window coordinates.
  */
 export async function measureAnchorInWindow(
-  ref: { current: number | null } | number | null
+  ref: { current: number | null } | number | null | any
 ): Promise<AnchorMeasurement | null> {
   return await measureInWindowStable(ref, { tries: 8 });
 }
