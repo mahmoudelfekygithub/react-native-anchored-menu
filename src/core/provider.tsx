@@ -110,7 +110,14 @@ export function AnchoredMenuProvider({
   // Register this provider globally so parents can route `open({ id })` to the correct layer.
   useEffect(() => {
     const entry = { anchors: anchorsRef.current, setRequest };
-    return registerProvider(entry);
+    const unregister = registerProvider(entry);
+    return () => {
+      // Close menu if open when provider unmounts
+      if (storeRef.current?.getSnapshot().isOpen) {
+        setRequest(null);
+      }
+      unregister();
+    };
   }, [setRequest]);
 
   const open = useCallback((payload: OpenMenuOptions) => {
@@ -138,8 +145,18 @@ export function AnchoredMenuProvider({
           );
         }
         const target = findProviderForAnchorId(anchorId);
-        if (target && target.setRequest)
+        if (target && target.setRequest) {
           return target.setRequest(payload as MenuRequest);
+        }
+        // Anchor not found in any provider
+        if (__DEV__) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[react-native-anchored-menu] Anchor with id="${anchorId}" not found in any provider. ` +
+              "Make sure the MenuAnchor is mounted and the id matches."
+          );
+        }
+        return; // Don't open menu if anchor doesn't exist
       }
 
       setRequest(payload as MenuRequest);
@@ -191,4 +208,3 @@ export function AnchoredMenuProvider({
     </AnchoredMenuActionsContext.Provider>
   );
 }
-
