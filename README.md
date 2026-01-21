@@ -193,6 +193,27 @@ export function ExampleModalMenu() {
 
 ## 🧠 API
 
+### Public API surface
+
+The following exports are considered **stable public API**:
+
+- `AnchoredMenuProvider` (with props: `defaultHost`, `autoHost`, `autoCloseOnBackground`, `host`)
+- `AnchoredMenuLayer`
+- `MenuAnchor`
+- `useAnchoredMenuActions`
+- `useAnchoredMenuState`
+- `useAnchoredMenu` (kept for backwards compatibility)
+- Types:
+  - `OpenMenuOptions`
+  - `MenuRenderProps`
+  - `MenuRenderFunction`
+  - `Placement`, `Align`, `HostType`, `MeasurementStrategy`, `AnimationType`
+  - `MenuPosition`
+
+Anything not listed above (for example low-level store or registry types, or the raw host implementations) is considered **internal** and may change in future minor/major versions.
+
+---
+
 ### `useAnchoredMenuActions()`
 
 ```ts

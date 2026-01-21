@@ -51,8 +51,13 @@ export function ModalHost() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const measureCacheRef = useRef(new Map<string, MeasureCache>());
   const remeasureTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Version token to guard against stale async measurements when requests change quickly.
+  const requestVersionRef = useRef(0);
 
   useEffect(() => {
+    // Bump version whenever the active request changes (including close).
+    requestVersionRef.current += 1;
+
     if (!req) {
       setAnchorWin(null);
       setHostWin(null);
@@ -75,6 +80,7 @@ export function ModalHost() {
   // Measure after Modal is visible (hostRef exists only then)
   useEffect(() => {
     let cancelled = false;
+    const versionAtStart = requestVersionRef.current;
 
     async function run() {
       if (!req || !actions) return;
@@ -97,6 +103,8 @@ export function ModalHost() {
       ]);
 
       if (cancelled) return;
+      // Ignore stale results if a newer request/version has started.
+      if (versionAtStart !== requestVersionRef.current) return;
       
       // Validate measurements before using them
       if (!isValidMeasurement(a) || !isValidMeasurement(h)) {
@@ -140,12 +148,14 @@ export function ModalHost() {
 
     const showSubscription = Keyboard.addListener("keyboardDidShow", (e) => {
       setKeyboardHeight(e.endCoordinates.height);
+      const versionAtSchedule = requestVersionRef.current;
       // Debounce re-measurement to avoid multiple rapid calls
       if (remeasureTimeoutRef.current) {
         clearTimeout(remeasureTimeoutRef.current);
       }
       remeasureTimeoutRef.current = setTimeout(async () => {
         if (!req || !hostRef.current || !actions) return;
+        if (versionAtSchedule !== requestVersionRef.current) return;
         const refObj = actions.anchors.get(req.id);
         if (!refObj) return;
 
@@ -193,12 +203,14 @@ export function ModalHost() {
 
     const hideSubscription = Keyboard.addListener("keyboardDidHide", () => {
       setKeyboardHeight(0);
+      const versionAtSchedule = requestVersionRef.current;
       // Re-measure when keyboard hides
       if (remeasureTimeoutRef.current) {
         clearTimeout(remeasureTimeoutRef.current);
       }
       remeasureTimeoutRef.current = setTimeout(async () => {
         if (!req || !hostRef.current || !actions) return;
+        if (versionAtSchedule !== requestVersionRef.current) return;
         const refObj = actions.anchors.get(req.id);
         if (!refObj) return;
 

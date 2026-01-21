@@ -25,7 +25,7 @@ import type {
  * Provider config
  * - defaultHost: which host to use when `open()` doesn't specify one (default: "view")
  * - autoHost: automatically mounts the host implementation (default: true)
- * - autoCloseOnBackground: automatically close menus when app goes to background (default: true)
+ * - autoCloseOnBackground: automatically close menus when app goes to background (default: false)
  */
 export function AnchoredMenuProvider({
   children,
@@ -33,7 +33,7 @@ export function AnchoredMenuProvider({
   host,
   defaultHost = (host ?? "view") as HostType,
   autoHost = true,
-  autoCloseOnBackground = true,
+  autoCloseOnBackground = false,
 }: AnchoredMenuProviderProps) {
   const anchorsRef = useRef(new Map<string, any>()); // id -> ref
   const pendingOpenRafRef = useRef<number | null>(null);
