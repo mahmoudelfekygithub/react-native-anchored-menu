@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Platform } from "react-native";
+import { AppState, Platform } from "react-native";
 import {
   AnchoredMenuActionsContext,
   AnchoredMenuStateContext,
@@ -25,6 +25,7 @@ import type {
  * Provider config
  * - defaultHost: which host to use when `open()` doesn't specify one (default: "view")
  * - autoHost: automatically mounts the host implementation (default: true)
+ * - autoCloseOnBackground: automatically close menus when app goes to background (default: true)
  */
 export function AnchoredMenuProvider({
   children,
@@ -32,6 +33,7 @@ export function AnchoredMenuProvider({
   host,
   defaultHost = (host ?? "view") as HostType,
   autoHost = true,
+  autoCloseOnBackground = true,
 }: AnchoredMenuProviderProps) {
   const anchorsRef = useRef(new Map<string, any>()); // id -> ref
   const pendingOpenRafRef = useRef<number | null>(null);
@@ -119,6 +121,23 @@ export function AnchoredMenuProvider({
       unregister();
     };
   }, [setRequest]);
+
+  // Auto-close menu when app goes to background to avoid weird states
+  useEffect(() => {
+    if (!autoCloseOnBackground) return;
+
+    const subscription = AppState.addEventListener("change", (nextAppState: string) => {
+      if (nextAppState === "background" || nextAppState === "inactive") {
+        if (storeRef.current?.getSnapshot().isOpen) {
+          setRequest(null);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [setRequest, autoCloseOnBackground]);
 
   const open = useCallback((payload: OpenMenuOptions) => {
     // Defer by default to avoid "open tap" being interpreted as an outside press

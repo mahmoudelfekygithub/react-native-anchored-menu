@@ -11,6 +11,7 @@ import {
   measureInWindowStable,
 } from "../utils/measure";
 import { computeMenuPosition } from "../utils/position";
+import { isValidMeasurement, isValidMenuSize } from "../utils/validation";
 import { isFabricEnabled } from "../utils/runtime";
 import type {
   AnchorMeasurement,
@@ -27,7 +28,12 @@ interface MeasureCache {
 export function ModalHost() {
   const actions = useContext(AnchoredMenuActionsContext);
   const store = useContext(AnchoredMenuStateContext);
-  if (!actions || !store) throw new Error("AnchoredMenuProvider is missing");
+  if (!actions || !store) {
+    throw new Error(
+      "[react-native-anchored-menu] ModalHost must be used within an AnchoredMenuProvider. " +
+        "This is usually handled automatically by AnchoredMenuProvider when autoHost=true."
+    );
+  }
 
   const activeHost = useAnchoredMenuState((s) => s.activeHost);
   if (activeHost !== "modal") return null;
@@ -91,7 +97,28 @@ export function ModalHost() {
       ]);
 
       if (cancelled) return;
+      
+      // Validate measurements before using them
+      if (!isValidMeasurement(a) || !isValidMeasurement(h)) {
+        if (__DEV__) {
+          console.warn(
+            `[react-native-anchored-menu] Invalid measurement for anchor "${req.id}". ` +
+              "Menu will not be positioned correctly. This can happen during layout transitions."
+          );
+        }
+        return;
+      }
+
       const nextAnchorWin = applyAnchorMargins(a, refObj);
+      if (!isValidMeasurement(nextAnchorWin)) {
+        if (__DEV__) {
+          console.warn(
+            `[react-native-anchored-menu] Invalid anchor measurement after applying margins for "${req.id}".`
+          );
+        }
+        return;
+      }
+
       setAnchorWin(nextAnchorWin);
       setHostWin(h);
       measureCacheRef.current.set(req.id, {
@@ -134,7 +161,26 @@ export function ModalHost() {
           measure(hostRef as any, strategy === "stable" ? { tries } : undefined),
         ]);
 
+        // Validate measurements before using them
+        if (!isValidMeasurement(a) || !isValidMeasurement(h)) {
+          if (__DEV__) {
+            console.warn(
+              `[react-native-anchored-menu] Invalid measurement during keyboard show for anchor "${req.id}".`
+            );
+          }
+          return;
+        }
+
         const nextAnchorWin = applyAnchorMargins(a, refObj);
+        if (!isValidMeasurement(nextAnchorWin)) {
+          if (__DEV__) {
+            console.warn(
+              `[react-native-anchored-menu] Invalid anchor measurement after applying margins during keyboard show for "${req.id}".`
+            );
+          }
+          return;
+        }
+
         setAnchorWin(nextAnchorWin);
         setHostWin(h);
         measureCacheRef.current.set(req.id, {
@@ -168,7 +214,26 @@ export function ModalHost() {
           measure(hostRef as any, strategy === "stable" ? { tries } : undefined),
         ]);
 
+        // Validate measurements before using them
+        if (!isValidMeasurement(a) || !isValidMeasurement(h)) {
+          if (__DEV__) {
+            console.warn(
+              `[react-native-anchored-menu] Invalid measurement during keyboard hide for anchor "${req.id}".`
+            );
+          }
+          return;
+        }
+
         const nextAnchorWin = applyAnchorMargins(a, refObj);
+        if (!isValidMeasurement(nextAnchorWin)) {
+          if (__DEV__) {
+            console.warn(
+              `[react-native-anchored-menu] Invalid anchor measurement after applying margins during keyboard hide for "${req.id}".`
+            );
+          }
+          return;
+        }
+
         setAnchorWin(nextAnchorWin);
         setHostWin(h);
         measureCacheRef.current.set(req.id, {
@@ -200,6 +265,17 @@ export function ModalHost() {
 
   const position = useMemo(() => {
     if (!req || !anchorInHost) return null;
+    
+    // Validate anchor measurement before computing position
+    if (!isValidMeasurement(anchorInHost)) {
+      if (__DEV__) {
+        console.warn(
+          `[react-native-anchored-menu] Cannot compute position for anchor "${req.id}": invalid measurement.`
+        );
+      }
+      return null;
+    }
+
     const viewport: Viewport | undefined =
       hostSize.width && hostSize.height
         ? {
@@ -209,7 +285,7 @@ export function ModalHost() {
         : undefined;
     return computeMenuPosition({
       anchor: anchorInHost,
-      menuSize,
+      menuSize: isValidMenuSize(menuSize) ? menuSize : null,
       viewport,
       placement: req.placement ?? "auto",
       offset: req.offset ?? 8,
@@ -219,7 +295,7 @@ export function ModalHost() {
     });
   }, [req, anchorInHost, menuSize, hostSize, keyboardHeight]);
 
-  const needsInitialMeasure = menuSize.width === 0 || menuSize.height === 0;
+  const needsInitialMeasure = !isValidMenuSize(menuSize);
 
   const statusBarTranslucent =
     req?.statusBarTranslucent ?? (Platform.OS === "android" ? false : true);

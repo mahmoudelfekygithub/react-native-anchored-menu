@@ -37,7 +37,12 @@ export function useAnchoredMenuState<T = MenuState>(
   selector: (state: MenuState) => T = ((s: MenuState) => s) as (state: MenuState) => T
 ): T {
   const store = useContext(AnchoredMenuStateContext);
-  if (!store) throw new Error("AnchoredMenuProvider is missing");
+  if (!store) {
+    throw new Error(
+      "[react-native-anchored-menu] useAnchoredMenuState must be used within an AnchoredMenuProvider. " +
+        "Make sure to wrap your component tree with <AnchoredMenuProvider> or <AnchoredMenuLayer>."
+    );
+  }
 
   const getSelectedSnapshot = () => selector(store.getSnapshot());
   return useSyncExternalStore(

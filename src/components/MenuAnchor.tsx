@@ -31,7 +31,12 @@ function extractMarginsFromChild(children: React.ReactNode): AnchorMargins {
 
 export function MenuAnchor({ id, children }: MenuAnchorProps) {
   const actions = useContext(AnchoredMenuActionsContext);
-  if (!actions) throw new Error("AnchoredMenuProvider is missing");
+  if (!actions) {
+    throw new Error(
+      "[react-native-anchored-menu] MenuAnchor must be used within an AnchoredMenuProvider. " +
+        "Make sure to wrap your component tree with <AnchoredMenuProvider> or <AnchoredMenuLayer>."
+    );
+  }
 
   const ref = useRef<View>(null) as AnchorRefObject;
 

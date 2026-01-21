@@ -152,6 +152,8 @@ export interface AnchoredMenuProviderProps {
   children: ReactNode;
   defaultHost?: HostType;
   autoHost?: boolean;
+  /** Whether to automatically close menus when app goes to background/inactive (default: true) */
+  autoCloseOnBackground?: boolean;
   /** @deprecated Use defaultHost instead */
   host?: HostType;
 }
