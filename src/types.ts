@@ -163,6 +163,8 @@ export interface AnchoredMenuProviderProps {
 export interface MenuAnchorProps {
   id: string;
   children: ReactNode;
+  /** Optional style for the anchor wrapper View */
+  style?: ViewStyle;
 }
 
 /**

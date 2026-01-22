@@ -29,7 +29,7 @@ function extractMarginsFromChild(children: React.ReactNode): AnchorMargins {
   }
 }
 
-export function MenuAnchor({ id, children }: MenuAnchorProps) {
+export function MenuAnchor({ id, children, style }: MenuAnchorProps) {
   const actions = useContext(AnchoredMenuActionsContext);
   if (!actions) {
     throw new Error(
@@ -54,7 +54,7 @@ export function MenuAnchor({ id, children }: MenuAnchorProps) {
 
   // collapsable={false} is important for Android measurement reliability
   return (
-    <View ref={ref} collapsable={false}>
+    <View ref={ref} collapsable={false} style={style}>
       {children}
     </View>
   );
