@@ -14,7 +14,7 @@ export function useAnchoredMenuActions(): {
   if (!actions) {
     throw new Error(
       "[react-native-anchored-menu] useAnchoredMenuActions must be used within an AnchoredMenuProvider. " +
-        "Make sure to wrap your component tree with <AnchoredMenuProvider> or <AnchoredMenuLayer>."
+        "Make sure to wrap your component tree with <AnchoredMenuProvider>."
     );
   }
 

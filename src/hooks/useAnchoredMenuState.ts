@@ -40,7 +40,7 @@ export function useAnchoredMenuState<T = MenuState>(
   if (!store) {
     throw new Error(
       "[react-native-anchored-menu] useAnchoredMenuState must be used within an AnchoredMenuProvider. " +
-        "Make sure to wrap your component tree with <AnchoredMenuProvider> or <AnchoredMenuLayer>."
+        "Make sure to wrap your component tree with <AnchoredMenuProvider>."
     );
   }
 

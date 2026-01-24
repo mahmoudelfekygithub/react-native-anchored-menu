@@ -38,7 +38,7 @@ export function AnchoredMenuProvider({
   const anchorsRef = useRef(new Map<string, any>()); // id -> ref
   const pendingOpenRafRef = useRef<number | null>(null);
   const defaultHostRef = useRef(defaultHost);
-  defaultHostRef.current = defaultHost;
+  defaultHostRef.current = defaultHost; //this is to update the defaultHostRef.current when the defaultHost prop changes
 
   // Tiny external store so open/close doesn't re-render the whole provider subtree.
   const storeRef = useRef<MenuStore | null>(null);
@@ -72,8 +72,8 @@ export function AnchoredMenuProvider({
         // eslint-disable-next-line no-console
         console.warn(
           `[react-native-anchored-menu] Unknown host="${String(
-            nextActiveHost
-          )}". Falling back to host="view".`
+            nextActiveHost,
+          )}". Falling back to host="view".`,
         );
       }
       nextActiveHost = "view";
@@ -89,7 +89,7 @@ export function AnchoredMenuProvider({
       if (__DEV__) {
         // eslint-disable-next-line no-console
         console.warn(
-          '[react-native-anchored-menu] host="modal" is disabled when Fabric is enabled; falling back to host="view".'
+          '[react-native-anchored-menu] host="modal" is disabled when Fabric is enabled; falling back to host="view".',
         );
       }
     }
@@ -126,13 +126,16 @@ export function AnchoredMenuProvider({
   useEffect(() => {
     if (!autoCloseOnBackground) return;
 
-    const subscription = AppState.addEventListener("change", (nextAppState: string) => {
-      if (nextAppState === "background" || nextAppState === "inactive") {
-        if (storeRef.current?.getSnapshot().isOpen) {
-          setRequest(null);
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextAppState: string) => {
+        if (nextAppState === "background" || nextAppState === "inactive") {
+          if (storeRef.current?.getSnapshot().isOpen) {
+            setRequest(null);
+          }
         }
-      }
-    });
+      },
+    );
 
     return () => {
       subscription.remove();
@@ -160,7 +163,7 @@ export function AnchoredMenuProvider({
           // eslint-disable-next-line no-console
           console.warn(
             `[react-native-anchored-menu] Multiple MenuAnchors registered with id="${anchorId}". ` +
-              "Using the most recently mounted provider. Consider unique ids per screen/modal."
+              "Using the most recently mounted provider. Consider unique ids per screen/modal.",
           );
         }
         const target = findProviderForAnchorId(anchorId);
@@ -172,7 +175,7 @@ export function AnchoredMenuProvider({
           // eslint-disable-next-line no-console
           console.warn(
             `[react-native-anchored-menu] Anchor with id="${anchorId}" not found in any provider. ` +
-              "Make sure the MenuAnchor is mounted and the id matches."
+              "Make sure the MenuAnchor is mounted and the id matches.",
           );
         }
         return; // Don't open menu if anchor doesn't exist
@@ -208,7 +211,7 @@ export function AnchoredMenuProvider({
       // provider config
       defaultHost,
     }),
-    [registerAnchor, unregisterAnchor, open, close, defaultHost]
+    [registerAnchor, unregisterAnchor, open, close, defaultHost],
   );
 
   const stateStore = storeRef.current;

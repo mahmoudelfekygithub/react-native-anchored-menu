@@ -167,13 +167,6 @@ export interface MenuAnchorProps {
   style?: ViewStyle;
 }
 
-/**
- * AnchoredMenuLayer props
- */
-export interface AnchoredMenuLayerProps extends Omit<AnchoredMenuProviderProps, "children"> {
-  children: ReactNode;
-  style?: ViewStyle;
-}
 
 /**
  * Position calculation result

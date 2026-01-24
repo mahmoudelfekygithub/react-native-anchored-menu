@@ -133,7 +133,7 @@ React Native `<Modal>` is rendered in a separate native layer. To ensure the men
 
 **Sheets & overlays**:
 
-- **Native-layer overlays** (RN `<Modal>`, `react-native-navigation` modals/overlays, etc.): mount `AnchoredMenuLayer` inside that overlay’s content tree.
+- **Native-layer overlays** (RN `<Modal>`, `react-native-navigation` modals/overlays, etc.): mount `AnchoredMenuProvider` inside that overlay’s content tree.
 - **JS-only sheets** (rendered as normal React views in the same tree): you can keep a single provider at the app root.
 
 Recommended:
@@ -142,7 +142,7 @@ Recommended:
 import React, { useState } from "react";
 import { Modal, Pressable, Text, View } from "react-native";
 import {
-  AnchoredMenuLayer,
+  AnchoredMenuProvider,
   MenuAnchor,
   useAnchoredMenuActions,
 } from "react-native-anchored-menu";
@@ -158,8 +158,9 @@ export function ExampleModalMenu() {
       </Pressable>
 
       <Modal transparent visible={visible} onRequestClose={() => setVisible(false)}>
-        <AnchoredMenuLayer>
-          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View style={{ flex: 1, position: "relative" }}>
+          <AnchoredMenuProvider>
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
             <MenuAnchor id="modal-menu">
       <Pressable
                 onPress={() =>
@@ -183,8 +184,9 @@ export function ExampleModalMenu() {
             <Pressable onPress={() => setVisible(false)}>
               <Text>Close modal</Text>
             </Pressable>
-          </View>
-        </AnchoredMenuLayer>
+            </View>
+          </AnchoredMenuProvider>
+        </View>
       </Modal>
     </>
   );
@@ -198,7 +200,6 @@ export function ExampleModalMenu() {
 The following exports are considered **stable public API**:
 
 - `AnchoredMenuProvider` (with props: `defaultHost`, `autoHost`, `autoCloseOnBackground`, `host`)
-- `AnchoredMenuLayer`
 - `MenuAnchor`
 - `useAnchoredMenuActions`
 - `useAnchoredMenuState`

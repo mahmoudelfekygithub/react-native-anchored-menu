@@ -1,7 +1,6 @@
 // Public, stable API
 export { AnchoredMenuProvider } from "./core/provider";
 export { MenuAnchor } from "./components/MenuAnchor";
-export { AnchoredMenuLayer } from "./components/AnchoredMenuLayer";
 export { useAnchoredMenu } from "./hooks/useAnchoredMenu";
 export { useAnchoredMenuActions } from "./hooks/useAnchoredMenuActions";
 export { useAnchoredMenuState } from "./hooks/useAnchoredMenuState";
@@ -28,7 +27,6 @@ export type {
   MenuState,
   AnchoredMenuProviderProps,
   MenuAnchorProps,
-  AnchoredMenuLayerProps,
   MenuPosition,
 } from "./types";
 export type { ComputeMenuPositionOptions } from "./utils/position";
