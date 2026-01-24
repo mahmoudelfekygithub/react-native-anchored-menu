@@ -127,6 +127,29 @@ open({
 
 ---
 
+## 📱 Example App
+
+Want to see the library in action? Check out the comprehensive example app that demonstrates all features:
+
+```bash
+cd example
+npm install
+npm start      # Opens Expo Developer Tools
+# Then press 'i' for iOS or 'a' for Android
+```
+
+The example includes:
+
+- **Basic Usage** - Simple menus and fundamentals
+- **FlatList Integration** - Context menus in scrolling lists  
+- **Modal Usage** - Menus inside React Native modals
+- **Placement Options** - All positioning and alignment combinations
+- **Custom Styling** - Themes, animations, and advanced patterns
+
+Each example includes live code samples and explanations to help you understand the implementation.
+
+---
+
 ## 🪟 Using inside React Native `<Modal>`
 
 React Native `<Modal>` is rendered in a separate native layer. To ensure the menu appears **above** the modal content, mount a provider/layer **inside** the modal tree.
