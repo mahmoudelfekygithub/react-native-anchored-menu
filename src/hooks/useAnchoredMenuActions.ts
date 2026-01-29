@@ -3,8 +3,14 @@ import { AnchoredMenuActionsContext } from "../core/context";
 import type { OpenMenuOptions } from "../types";
 
 /**
- * Stable actions-only hook.
- * Components using this won't re-render when menu state changes.
+ * Actions-only hook that provides open/close functions without subscribing to menu state.
+ * 
+ * Use this hook when you only need to trigger menu actions and don't need to know if the menu
+ * is currently open. Components using this hook will NOT re-render when menu state changes,
+ * making it ideal for performance-sensitive components like buttons or list items.
+ * 
+ * If you need to track menu state (e.g., show loading indicator when menu is open), use
+ * `useAnchoredMenu()` or combine `useAnchoredMenuActions()` with `useAnchoredMenuState()`.
  */
 export function useAnchoredMenuActions(): {
   open: (options: OpenMenuOptions) => void;

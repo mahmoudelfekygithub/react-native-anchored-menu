@@ -15,7 +15,10 @@ try {
   }
 } catch {
   // Fallback for older React versions - use useState + useEffect
-  useSyncExternalStore = (subscribe: (onStoreChange: () => void) => () => void, getSnapshot: () => any) => {
+  useSyncExternalStore = (
+    subscribe: (onStoreChange: () => void) => () => void,
+    getSnapshot: () => any,
+  ) => {
     const [state, setState] = useState(() => getSnapshot());
     useEffect(() => {
       const unsubscribe = subscribe(() => {
@@ -34,13 +37,15 @@ try {
  *   const isOpen = useAnchoredMenuState(s => s.isOpen)
  */
 export function useAnchoredMenuState<T = MenuState>(
-  selector: (state: MenuState) => T = ((s: MenuState) => s) as (state: MenuState) => T
+  selector: (state: MenuState) => T = ((s: MenuState) => s) as (
+    state: MenuState,
+  ) => T,
 ): T {
   const store = useContext(AnchoredMenuStateContext);
   if (!store) {
     throw new Error(
       "[react-native-anchored-menu] useAnchoredMenuState must be used within an AnchoredMenuProvider. " +
-        "Make sure to wrap your component tree with <AnchoredMenuProvider>."
+        "Make sure to wrap your component tree with <AnchoredMenuProvider>.",
     );
   }
 
@@ -48,7 +53,6 @@ export function useAnchoredMenuState<T = MenuState>(
   return useSyncExternalStore(
     store.subscribe,
     getSelectedSnapshot,
-    getSelectedSnapshot
+    getSelectedSnapshot,
   );
 }
-

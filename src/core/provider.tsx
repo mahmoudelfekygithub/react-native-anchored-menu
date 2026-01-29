@@ -22,6 +22,31 @@ import type {
 } from "../types";
 
 /**
+ * Creates a new MenuStore instance with its own state and listeners.
+ * Each provider instance needs its own store to maintain independent state.
+ */
+function createMenuStore(defaultHost: HostType): MenuStore {
+  const listeners = new Set<() => void>();
+  let snapshot: MenuState = {
+    request: null,
+    activeHost: defaultHost,
+    isOpen: false,
+  };
+
+  return {
+    getSnapshot: () => snapshot,
+    subscribe: (listener: () => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    _setSnapshot: (next: MenuState) => {
+      snapshot = next;
+      listeners.forEach((l) => l());
+    },
+  };
+}
+
+/**
  * Provider config
  * - defaultHost: which host to use when `open()` doesn't specify one (default: "view")
  * - autoHost: automatically mounts the host implementation (default: true)
@@ -40,27 +65,21 @@ export function AnchoredMenuProvider({
   const defaultHostRef = useRef(defaultHost);
   defaultHostRef.current = defaultHost; //this is to update the defaultHostRef.current when the defaultHost prop changes
 
-  // Tiny external store so open/close doesn't re-render the whole provider subtree.
+  // External store pattern: state lives outside React to prevent re-renders.
+  // When menu opens/closes, only components subscribed via useSyncExternalStore re-render,
+  // not the entire provider subtree. Each provider instance maintains its own independent store.
   const storeRef = useRef<MenuStore | null>(null);
   if (!storeRef.current) {
-    const listeners = new Set<() => void>();
-    let snapshot: MenuState = {
-      request: null,
-      activeHost: defaultHost,
-      isOpen: false,
-    };
-    storeRef.current = {
-      getSnapshot: () => snapshot,
-      subscribe: (listener: () => void) => {
-        listeners.add(listener);
-        return () => listeners.delete(listener);
-      },
-      _setSnapshot: (next: MenuState) => {
-        snapshot = next;
-        listeners.forEach((l) => l());
-      },
-    };
+    storeRef.current = createMenuStore(defaultHost);
   }
+
+  // Helper to cancel any pending open operation (used in both open and close)
+  const cancelPendingOpen = useCallback(() => {
+    if (pendingOpenRafRef.current) {
+      cancelAnimationFrame(pendingOpenRafRef.current);
+      pendingOpenRafRef.current = null;
+    }
+  }, []);
 
   const setRequest = useCallback((payload: MenuRequest | null) => {
     const defaultH = defaultHostRef.current ?? "view";
@@ -143,17 +162,20 @@ export function AnchoredMenuProvider({
   }, [setRequest, autoCloseOnBackground]);
 
   const open = useCallback((payload: OpenMenuOptions) => {
-    // Defer by default to avoid "open tap" being interpreted as an outside press
-    // when a host mounts a Pressable backdrop during the active gesture.
-    if (pendingOpenRafRef.current) {
-      cancelAnimationFrame(pendingOpenRafRef.current);
-      pendingOpenRafRef.current = null;
-    }
+    // Defer opening by default to avoid the tap that opens the menu being interpreted
+    // as an outside press when the host mounts a Pressable backdrop during the same gesture.
+    // Cancel any pending open operation if a new open() call happens before it executes.
+    cancelPendingOpen();
 
     const commit = () => {
+      // Handle close case: if payload is null/undefined, close the menu by clearing the request.
+      // This allows open(null) to be used as an alternative to close().
       if (!payload) return setRequest(null);
 
-      // If the anchor isn't registered in this provider, route to a nested provider that has it.
+      // Cross-provider routing: If the anchor isn't registered in this provider, search for it
+      // in nested providers (e.g., a provider inside a Modal). This allows menus to work across
+      // provider boundaries, which is essential when anchors exist in separate React trees
+      // (like React Native Modals that render in a different native layer).
       const anchorId = payload.id;
       const hasLocalAnchor = anchorsRef.current?.has?.(anchorId);
 
@@ -181,12 +203,18 @@ export function AnchoredMenuProvider({
         return; // Don't open menu if anchor doesn't exist
       }
 
+      // Anchor is registered in this provider (hasLocalAnchor === true).
+      // Set the request to open the menu in this provider's context.
       setRequest(payload as MenuRequest);
     };
 
+    // Handle immediate case: if payload.immediate is true, commit the request immediately.
+    // Otherwise, defer the opening by using requestAnimationFrame to avoid conflicts with
+    // the tap that opens the menu.
     if (payload?.immediate) commit();
     else {
       pendingOpenRafRef.current = requestAnimationFrame(() => {
+        // Clear the pending reference after the frame executes to avoid stale references.
         pendingOpenRafRef.current = null;
         commit();
       });
@@ -194,12 +222,10 @@ export function AnchoredMenuProvider({
   }, []);
 
   const close = useCallback(() => {
-    if (pendingOpenRafRef.current) {
-      cancelAnimationFrame(pendingOpenRafRef.current);
-      pendingOpenRafRef.current = null;
-    }
+    // Cancel any pending open operation to prevent opening the menu again.
+    cancelPendingOpen();
     setRequest(null);
-  }, []);
+  }, [cancelPendingOpen]);
 
   const actionsValue = useMemo(
     () => ({

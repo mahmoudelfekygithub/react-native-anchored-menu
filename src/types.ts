@@ -95,10 +95,9 @@ export interface OpenMenuOptions {
 
 /**
  * Menu request (internal state)
+ * Extends OpenMenuOptions - represents a validated menu request after processing.
  */
-export interface MenuRequest extends OpenMenuOptions {
-  id: string;
-}
+export interface MenuRequest extends OpenMenuOptions {}
 
 /**
  * Menu state snapshot
